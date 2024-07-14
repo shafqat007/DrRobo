@@ -7,33 +7,52 @@ import { db } from '../config';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you're using FontAwesome icons
 
 const FetchData = ({ navigation }) => {
-  const [options, setOptions] = useState([{ hours: '', minutes: '', period: 'AM', label: 'Medicine 1', time: '' }]);
+  const [options, setOptions] = useState([{ hours: '', minutes: '', period: 'AM', label: 'Med 1', name: '', time: '' }]);
   const [successMessage, setSuccessMessage] = useState('');
   const [currentTime, setCurrentTime] = useState('');
+  const [acknowledgedMeds, setAcknowledgedMeds] = useState([]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
+      const hours = now.getHours();
       const minutes = now.getMinutes().toString().padStart(2, '0');
       const period = hours >= 12 ? 'PM' : 'AM';
-      setCurrentTime(`${hours}:${minutes} ${period}`);
+      const formattedHours = ((hours % 12) || 12).toString().padStart(2, '0');
+      setCurrentTime(`${formattedHours}:${minutes} ${period}`);
 
       // Check if any medicine time matches the current time
-      const match = options.find(option => option.time === currentTime);
+      const match = options.find(option => option.time === `${formattedHours}:${minutes} ${period}` && !acknowledgedMeds.includes(option.label));
       if (match) {
         // Show alert only once when the current time matches medicine time
         setTimeout(() => {
-          Alert.alert('Take Medicine', `It's time to take ${match.label}`);
+          Alert.alert(
+            'Take Medicine',
+            `It's time to take ${match.label} "${match.name}"`,
+            [
+              {
+                text: 'Yes',
+                onPress: () => {
+                  setAcknowledgedMeds(prev => [...prev, match.label]);
+                },
+              },
+              {
+                text: 'No',
+                onPress: () => {},
+                style: 'cancel',
+              },
+            ],
+            { cancelable: false }
+          );
         }, 1000); // Delay of 1 second to ensure the alert shows at the exact time
       }
     }, 1000); // Update time every second
 
     return () => clearInterval(intervalId);
-  }, [currentTime, options]);
+  }, [currentTime, options, acknowledgedMeds]);
 
   const addOption = () => {
-    const newOptions = [...options, { hours: '', minutes: '', period: 'AM', label: `Medicine ${options.length + 1}`, time: '' }];
+    const newOptions = [...options, { hours: '', minutes: '', period: 'AM', label: `Med ${options.length + 1}`, name: '', time: '' }];
     setOptions(newOptions);
   };
 
@@ -48,7 +67,8 @@ const FetchData = ({ navigation }) => {
     const newOptions = [...options];
     newOptions[index][fieldName] = newValue;
     // Set the time property based on the input hours, minutes, and period
-    newOptions[index].time = `${newOptions[index].hours}:${newOptions[index].minutes} ${newOptions[index].period}`;
+    const formattedHours = newOptions[index].hours.toString().padStart(2, '0');
+    newOptions[index].time = `${formattedHours}:${newOptions[index].minutes.padStart(2, '0')} ${newOptions[index].period}`;
     setOptions(newOptions);
   };
 
@@ -56,7 +76,7 @@ const FetchData = ({ navigation }) => {
     const newOptions = options.filter((_, index) => index !== indexToDelete);
     // Update labels
     for (let i = indexToDelete; i < newOptions.length; i++) {
-      newOptions[i].label = `Medicine ${i + 1}`;
+      newOptions[i].label = `Med ${i + 1}`;
     }
     setOptions(newOptions);
   };
@@ -66,7 +86,8 @@ const FetchData = ({ navigation }) => {
       if (option.hours.trim() !== '' && option.minutes.trim() !== '') {
         push(ref(db, 'Options'), {
           label: option.label,
-          time: `${option.hours}:${option.minutes} ${option.period}`,
+          name: option.name,
+          time: option.time,
         })
           .then(() => {
             console.log('Data pushed successfully:', option);
@@ -101,14 +122,22 @@ const FetchData = ({ navigation }) => {
       <View style={styles.optionsContainer}>
         {options.map((option, index) => (
           <View key={index} style={styles.optionRow}>
-            <Icon
-              name="minus"
-              size={20}
-              color="#ffffff"
-              style={styles.deleteIcon}
-              onPress={() => deleteOption(index)}
-            />
+            {options.length > 1 && (
+              <Icon
+                name="minus"
+                size={20}
+                color="#ffffff"
+                style={styles.deleteIcon}
+                onPress={() => deleteOption(index)}
+              />
+            )}
             <Text style={styles.optionLabel}>{option.label}</Text>
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Medicine Name"
+              value={option.name}
+              onChangeText={(value) => handleInputChange(index, 'name', value)}
+            />
             <View style={styles.timeInputContainer}>
               <TextInput
                 style={styles.timeInput}
@@ -131,9 +160,10 @@ const FetchData = ({ navigation }) => {
                 style={styles.periodPicker}
                 selectedValue={option.period}
                 onValueChange={(value) => handleInputChange(index, 'period', value)}
+                dropdownIconColor="#ffffff" // Set the dropdown arrow color to white
               >
-                <Picker.Item color="#000000" label="AM" value="AM" />
-                <Picker.Item color="#000000" label="PM" value="PM" />
+                <Picker.Item label="AM" value="AM" />
+                <Picker.Item label="PM" value="PM" />
               </Picker>
             </View>
             {index === options.length - 1 && (
@@ -156,6 +186,7 @@ const FetchData = ({ navigation }) => {
     </ScrollView>
   );
 };
+
 export default FetchData;
 
 const styles = StyleSheet.create({
@@ -164,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1f1f',
     alignItems: 'center',
     paddingTop: 40,
-    paddingBottom: 150
+    paddingBottom: 150,
   },
   headerContainer: {
     marginBottom: 20,
@@ -193,9 +224,17 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     color: '#ffffff',
-    fontSize: 18,
     marginRight: 10,
     fontFamily: 'Roboto',
+  },
+  nameInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#ffffff',
+    width: 100,
+    textAlign: 'center',
+    marginRight: 5,
+    borderRadius: 5,
+    fontSize: 18,
   },
   timeInputContainer: {
     flexDirection: 'row',
@@ -216,8 +255,9 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   periodPicker: {
-    color: '#000000',
-    width: 80,
+    color: '#ffffff',
+    width: 40,
+   
   },
   addIcon: {
     marginLeft: 10,
