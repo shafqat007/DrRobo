@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Picker, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Picker } from '@react-native-picker/picker';
 import { ref, set, push } from 'firebase/database';
 import { db } from '../config';
 import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you're using FontAwesome icons
@@ -68,7 +69,7 @@ const FetchData = ({ navigation }) => {
           time: `${option.hours}:${option.minutes} ${option.period}`,
         })
           .then(() => {
-            console.log('Data pushed successfully');
+            console.log('Data pushed successfully:', option);
           })
           .catch((error) => {
             console.error('Error pushing data:', error);
@@ -83,7 +84,7 @@ const FetchData = ({ navigation }) => {
     // Overwrite previous data in the database
     set(ref(db, 'Options'), options)
       .then(() => {
-        console.log('Data set successfully');
+        console.log('Data set successfully:', options);
       })
       .catch((error) => {
         console.error('Error setting data:', error);
@@ -155,7 +156,6 @@ const FetchData = ({ navigation }) => {
     </ScrollView>
   );
 };
-
 export default FetchData;
 
 const styles = StyleSheet.create({
