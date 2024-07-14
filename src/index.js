@@ -10,7 +10,6 @@ const FetchData = ({ navigation }) => {
   const [options, setOptions] = useState([{ hours: '', minutes: '', period: 'AM', label: 'Med 1', name: '', time: '' }]);
   const [successMessage, setSuccessMessage] = useState('');
   const [currentTime, setCurrentTime] = useState('');
-  const [acknowledgedMeds, setAcknowledgedMeds] = useState([]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -22,34 +21,17 @@ const FetchData = ({ navigation }) => {
       setCurrentTime(`${formattedHours}:${minutes} ${period}`);
 
       // Check if any medicine time matches the current time
-      const match = options.find(option => option.time === `${formattedHours}:${minutes} ${period}` && !acknowledgedMeds.includes(option.label));
+      const match = options.find(option => option.time === `${formattedHours}:${minutes} ${period}`);
       if (match) {
         // Show alert only once when the current time matches medicine time
         setTimeout(() => {
-          Alert.alert(
-            'Take Medicine',
-            `It's time to take ${match.label} "${match.name}"`,
-            [
-              {
-                text: 'Yes',
-                onPress: () => {
-                  setAcknowledgedMeds(prev => [...prev, match.label]);
-                },
-              },
-              {
-                text: 'No',
-                onPress: () => {},
-                style: 'cancel',
-              },
-            ],
-            { cancelable: false }
-          );
+          Alert.alert('Take Medicine', `It's time to take ${match.label} "${match.name}"`);
         }, 1000); // Delay of 1 second to ensure the alert shows at the exact time
       }
     }, 1000); // Update time every second
 
     return () => clearInterval(intervalId);
-  }, [currentTime, options, acknowledgedMeds]);
+  }, [currentTime, options]);
 
   const addOption = () => {
     const newOptions = [...options, { hours: '', minutes: '', period: 'AM', label: `Med ${options.length + 1}`, name: '', time: '' }];
@@ -156,15 +138,16 @@ const FetchData = ({ navigation }) => {
                 maxLength={2}
                 onChangeText={(value) => handleInputChange(index, 'minutes', value)}
               />
-              <Picker
-                style={styles.periodPicker}
-                selectedValue={option.period}
-                onValueChange={(value) => handleInputChange(index, 'period', value)}
-                dropdownIconColor="#ffffff" // Set the dropdown arrow color to white
-              >
-                <Picker.Item label="AM" value="AM" />
-                <Picker.Item label="PM" value="PM" />
-              </Picker>
+             <Picker
+  style={styles.periodPicker}
+  selectedValue={option.period}
+  onValueChange={(value) => handleInputChange(index, 'period', value)}
+  dropdownIconColor="#ffffff" // Set the dropdown arrow color to white
+>
+  <Picker.Item label="AM" value="AM" />
+  <Picker.Item label="PM" value="PM" />
+</Picker>
+
             </View>
             {index === options.length - 1 && (
               <Icon
@@ -195,7 +178,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1f1f',
     alignItems: 'center',
     paddingTop: 40,
-    paddingBottom: 150,
+    paddingBottom: 150
   },
   headerContainer: {
     marginBottom: 20,
@@ -224,6 +207,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     color: '#ffffff',
+    fontSize: 18,
     marginRight: 10,
     fontFamily: 'Roboto',
   },
@@ -256,7 +240,7 @@ const styles = StyleSheet.create({
   },
   periodPicker: {
     color: '#ffffff',
-    width: 40,
+    width: 30,
    
   },
   addIcon: {
