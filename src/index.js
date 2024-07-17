@@ -56,7 +56,7 @@ const FetchData = ({ navigation }) => {
 
   const deleteOption = (indexToDelete) => {
     const newOptions = options.filter((_, index) => index !== indexToDelete);
-    // Update labels
+    // Update labels ds
     for (let i = indexToDelete; i < newOptions.length; i++) {
       newOptions[i].label = `Med ${i + 1}`;
     }
@@ -116,7 +116,7 @@ const FetchData = ({ navigation }) => {
             <Text style={styles.optionLabel}>{option.label}</Text>
             <TextInput
               style={styles.nameInput}
-              placeholder="Medicine Name"
+              placeholder="Med Name"
               value={option.name}
               onChangeText={(value) => handleInputChange(index, 'name', value)}
             />
