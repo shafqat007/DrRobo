@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Picker } from '@react-native-picker/picker';
 import { ref, set, push } from 'firebase/database';
 import { db } from '../config';
-import Icon from 'react-native-vector-icons/FontAwesome'; // Assuming you're using FontAwesome icons
+import Icon from 'react-native-vector-icons/FontAwesome'; //  As suming you're using FontAwesome icons
 
 const FetchData = ({ navigation }) => {
   const [options, setOptions] = useState([{ hours: '', minutes: '', period: 'AM', label: 'Med 1', name: '', time: '' }]);
